@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A simple study and daily task planner. Organize tasks by due date and priority.">
+  <title>FocusFlow — Study & Task Planner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="FocusFlow home"><span class="brand-mark">F</span><span>FocusFlow</span></a>
+      <div class="topbar-right"><span class="live-dot"></span><span>Make today count</span></div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">YOUR PERSONAL PRODUCTIVITY SPACE</p>
+          <h1>Small steps.<br><span>Big progress.</span></h1>
+          <p class="hero-copy">Plan your study sessions, keep track of deadlines, and make room for what matters.</p>
+        </div>
+        <div class="hero-illustration" aria-hidden="true">
+          <div class="sun"></div><div class="plant-pot"></div><div class="plant-leaf leaf-one"></div><div class="plant-leaf leaf-two"></div>
+          <div class="floating-note"><span>✓</span> One thing at a time</div>
+        </div>
+      </section>
+
+      <section class="stats" aria-label="Task summary">
+        <article class="stat-card"><span class="stat-label">All tasks</span><strong>{{ total }}</strong><span class="stat-icon purple">▤</span></article>
+        <article class="stat-card"><span class="stat-label">To do</span><strong>{{ pending }}</strong><span class="stat-icon orange">◷</span></article>
+        <article class="stat-card"><span class="stat-label">Completed</span><strong>{{ completed }}</strong><span class="stat-icon green">✓</span></article>
+      </section>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="messages" aria-live="polite">
+            {% for category, message in messages %}<p class="message {{ category }}">{{ message }}</p>{% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <section class="workspace">
+        <div class="panel add-panel">
+          <div class="panel-heading"><div><p class="eyebrow">GET IT OUT OF YOUR HEAD</p><h2>Add a task</h2></div><span class="heading-symbol">＋</span></div>
+          <form action="{{ url_for('add_task') }}" method="post" id="task-form">
+            <label for="title">Task name</label>
+            <input id="title" name="title" maxlength="160" placeholder="e.g. Finish database assignment" required>
+            <div class="form-row">
+              <div><label for="category">Category</label><select id="category" name="category"><option>College</option><option>Learning</option><option>Personal</option><option>Work</option><option>General</option></select></div>
+              <div><label for="priority">Priority</label><select id="priority" name="priority"><option>Low</option><option selected>Medium</option><option>High</option></select></div>
+            </div>
+            <label for="due_date">Due date <span class="optional">(optional)</span></label>
+            <input id="due_date" name="due_date" type="date" min="{{ today }}">
+            <button class="primary-button" type="submit"><span>＋</span> Add to my plan</button>
+          </form>
+          <p class="form-tip"><span>✦</span> Tip: break large assignments into small tasks.</p>
+        </div>
+
+        <div class="panel tasks-panel">
+          <div class="tasks-heading">
+            <div><p class="eyebrow">YOUR PLAN</p><h2>Task board <span class="count-pill">{{ total }}</span></h2></div>
+            <div class="filters" role="group" aria-label="Filter tasks">
+              <button class="filter active" type="button" data-filter="all">All</button>
+              <button class="filter" type="button" data-filter="pending">To do</button>
+              <button class="filter" type="button" data-filter="completed">Done</button>
+            </div>
+          </div>
+          <div class="task-list" id="task-list">
+            {% for task in tasks %}
+              <article class="task-item {% if task.completed %}is-complete{% endif %}" data-status="{% if task.completed %}completed{% else %}pending{% endif %}" data-title="{{ task.title|lower }}" data-category="{{ task.category|lower }}">
+                <form action="{{ url_for('toggle_task', task_id=task.id) }}" method="post" class="toggle-form">
+                  <button class="check-button" type="submit" aria-label="{% if task.completed %}Mark incomplete{% else %}Mark complete{% endif %}">{% if task.completed %}✓{% endif %}</button>
+                </form>
+                <div class="task-content">
+                  <h3>{{ task.title }}</h3>
+                  <div class="task-meta"><span class="category">{{ task.category }}</span>
+                    {% if task.due_date %}<span class="due-date">▦ {{ task.due_date }}</span>{% endif %}
+                    <span class="priority priority-{{ task.priority|lower }}">{{ task.priority }}</span>
+                  </div>
+                </div>
+                <form action="{{ url_for('delete_task', task_id=task.id) }}" method="post" class="delete-form" onsubmit="return confirm('Delete this task?')">
+                  <button class="delete-button" type="submit" aria-label="Delete {{ task.title }}">×</button>
+                </form>
+              </article>
+            {% else %}
+              <div class="empty-state"><span>✧</span><h3>Your task list is clear</h3><p>Add a task to start planning your day.</p></div>
+            {% endfor %}
+            <div class="empty-filter" id="empty-filter" hidden><h3>No tasks in this view</h3><p>Try another filter or add a new task.</p></div>
+          </div>
+          <div class="board-footer"><span><span class="live-dot"></span> Your tasks are saved locally</span><span>Keep going ✦</span></div>
+        </div>
+      </section>
+      <section class="bottom-note"><span class="note-icon">✦</span><div><strong>Progress over perfection.</strong><p>You don't need to do everything today. Just start with one thing.</p></div></section>
+    </main>
+    <footer>FocusFlow · Study & Task Planner <span>Built as a DevOps learning project</span></footer>
+  </div>
+</body>
+</html>

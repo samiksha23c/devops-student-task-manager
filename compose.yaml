@@ -1,0 +1,15 @@
+services:
+  focusflow:
+    build: .
+    container_name: focusflow-study-planner
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_PATH: /data/planner.db
+      SECRET_KEY: change-this-for-real-deployment
+    volumes:
+      - focusflow_data:/data
+    restart: unless-stopped
+
+volumes:
+  focusflow_data:
